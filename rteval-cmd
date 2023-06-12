@@ -166,9 +166,18 @@ def parse_options(cfg, parser, cmdargs):
     parser.add_option("-V", "--version", dest="rteval___version",
                       action='store_true', default=False,
                       help='print rteval version and exit')
+    # if the -S/--source-download option doesn't include the version, set version to default
+    ind = None
+    if sys.argv.count("-S") > 0: ind = sys.argv.index("-S")
+    elif sys.argv.count("--source-download") > 0: ind = sys.argv.index("--source-download")
+    if ind != None:
+        if ind+1 == len(sys.argv): 
+            sys.argv.insert(ind+1, ModuleParameters()["source"]["default"].strip(".tar.xz"))
+        cmdargs.append(sys.argv[ind+1])
+
     parser.add_option("-S", "--source-download", dest="rteval___srcdownload",
                         type="string", default=None, metavar="KERNEL_VERSION",
-                        help='download a source kernel from kernel.org and exit')
+                        help='download a source kernel from kernel.org and exit (if no version is provided, downloads default kernel)')
 
 
     if not cmdargs:
@@ -272,7 +281,7 @@ if __name__ == '__main__':
         cmd_args = parse_options(config, parser, sys.argv[1:])
 
         # download kernel tarball
-        if rtevcfg.srcdownload:
+        if rtevcfg.srcdownload or (sys.argv.count('-S')+sys.argv.count('--source-download')) > 0:
             logger.log(Log.DEBUG, f"Kernel Version to download = {rtevcfg.srcdownload}")
 
             # handle a kernel version like linux-5.19-rc5
